@@ -13,8 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class AnswerTest {
-    public static final Answer A1 = new Answer(UserTest.JAVAJIGI, QuestionTest.Q1, "Answers Contents1");
-    public static final Answer A2 = new Answer(UserTest.SANJIGI, QuestionTest.Q1, "Answers Contents2");
+    public static final Answer A1 = new Answer(UserTest.JAVAJIGI, "Answers Contents1");
+    public static final Answer A2 = new Answer(UserTest.SANJIGI, "Answers Contents2");
 
     @Autowired
     private AnswerRepository answers;
@@ -29,12 +29,8 @@ public class AnswerTest {
     @Test
     void saveAnswerTest() {
         A1.setWriter(users.save(A1.getWriter()));
-        A1.getQuestion().setWriter(A1.getWriter());
-        A1.setQuestion(questions.save(A1.getQuestion()));
 
         A2.setWriter(users.save(A2.getWriter()));
-        A2.getQuestion().setWriter(A2.getWriter());
-        A2.setQuestion(questions.save(A2.getQuestion()));
 
         Answer actualAnswer1 = answers.save(A1);
         Answer actualAnswer2 = answers.save(A2);
@@ -43,7 +39,6 @@ public class AnswerTest {
                 () -> assertThat(actualAnswer1).isNotNull(),
                 () -> assertThat(actualAnswer1.getId()).isNotNull(),
                 () -> assertThat(actualAnswer1.getContents()).isEqualTo(A1.getContents()),
-                () -> assertThat(actualAnswer1.getQuestion()).isNotNull(),
                 () -> assertThat(actualAnswer1.getWriter()).isNotNull()
         );
 
@@ -51,7 +46,6 @@ public class AnswerTest {
                 () -> assertThat(actualAnswer2).isNotNull(),
                 () -> assertThat(actualAnswer2.getId()).isNotNull(),
                 () -> assertThat(actualAnswer2.getContents()).isEqualTo(A2.getContents()),
-                () -> assertThat(actualAnswer2.getQuestion()).isNotNull(),
                 () -> assertThat(actualAnswer2.getWriter()).isNotNull()
         );
     }
@@ -60,7 +54,6 @@ public class AnswerTest {
     @Test
     void findByContentsTest() {
         A1.setWriter(users.save(A1.getWriter()));
-        questions.save(A1.getQuestion());
         final Answer savedAnswer = answers.save(A1);
         Answer actualAnswer = answers.findByContents(A1.getContents())
                 .orElseThrow(() -> new IllegalArgumentException("answer가 존재하지 않습니다."));
@@ -75,8 +68,6 @@ public class AnswerTest {
     @Test
     void updateAnswerTest() {
         A1.setWriter(users.save(A1.getWriter()));
-        A1.getQuestion().setWriter(A1.getWriter());
-        A1.setQuestion(questions.save(A1.getQuestion()));
         final Answer savedAnswer = answers.save(A1);
         savedAnswer.setDeleted(true);
         Answer actualAnswer = answers.findByContents(A1.getContents())
@@ -84,13 +75,6 @@ public class AnswerTest {
 
         assertThat(actualAnswer.isDeleted()).isTrue();
         answers.flush();
-    }
-
-    @DisplayName("answer - question 연관관계 테스트")
-    @Test
-    void associateAnswerAndQuestionTest() {
-        Question question = A1.getQuestion();
-        assertThat(question).isNotNull();
     }
 
     @DisplayName("answer - user 연관관계 테스트")

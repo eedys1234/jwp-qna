@@ -28,8 +28,8 @@ public class Question extends BaseTime {
     @Column(nullable = false)
     private boolean deleted = false;
 
-    @OneToMany(mappedBy = "question")
-    private List<Answer> answers = new ArrayList<>();
+    @Embedded
+    private Answers answers;
 
     protected Question() {
 
@@ -43,6 +43,7 @@ public class Question extends BaseTime {
         this.id = id;
         this.title = title;
         this.contents = contents;
+        this.answers = new Answers();
     }
 
     public Question writeBy(User writer) {
@@ -74,15 +75,10 @@ public class Question extends BaseTime {
         return new DeleteHistory(ContentType.QUESTION, this.id, this.writer, LocalDateTime.now());
     }
 
-    private List<Answer> notDeletedAnswers() {
-        return this.answers.stream()
-                            .filter(a -> a.isNotDeleted())
-                            .collect(toList());
-    }
 
     public List<DeleteHistory> deleteAnswer(User writer) throws CannotDeleteException {
         List<DeleteHistory> deleteHistories = new ArrayList<>();
-        List<Answer> answers = notDeletedAnswers();
+        List<Answer> answers = this.answers.notDeletedAnswers();
         for(Answer answer : answers)
         {
             deleteHistories.add(answer.delete(writer));
@@ -92,7 +88,6 @@ public class Question extends BaseTime {
 
     public void addAnswer(Answer answer) {
         this.answers.add(answer);
-        answer.toQuestion(this);
     }
 
     public Long getId() {
